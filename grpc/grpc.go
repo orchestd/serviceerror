@@ -16,6 +16,7 @@ var grpcErrors = map[errortypes.ErrorType]codes.Code{
 	errortypes.NetworkError: codes.Unavailable,
 	errortypes.NoContent: codes.Unknown,
 	errortypes.ValidationError: codes.InvalidArgument,
+	errortypes.MethodNotAllowed: codes.PermissionDenied,
 }
 
 func GetGrpcCode(et errortypes.ErrorType) codes.Code{

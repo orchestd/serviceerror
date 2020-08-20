@@ -16,6 +16,7 @@ var grpcErrors = map[errortypes.ErrorType]int{
 	errortypes.NetworkError: http.StatusBadGateway,
 	errortypes.NoContent: http.StatusNoContent,
 	errortypes.ValidationError: http.StatusUnprocessableEntity,
+	errortypes.MethodNotAllowed: http.StatusMethodNotAllowed,
 }
 
 func GetHttpCode(et errortypes.ErrorType) int{

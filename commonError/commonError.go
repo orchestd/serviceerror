@@ -10,5 +10,6 @@ const (
 	NotActiveEmployee = "notActiveEmployee"
 	DuplicateEntry = "duplicateEntry"
 	Forbidden         string = "forbidden"
+	NoContent = "noContent"
 	InternalServiceError string = "Internal service error"
 )
