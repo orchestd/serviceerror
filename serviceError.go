@@ -9,7 +9,7 @@ import (
 type ServiceError interface {
 	GetInternalError() error
 	GetUserError() string
-	GetErrorType() string
+	GetErrorType() errortypes.ErrorType
 	AddExtraData(map[string]interface{}) ServiceError
 	GetExtraData() map[string]interface{}
 }
@@ -17,14 +17,13 @@ type ServiceError interface {
 type BaseServiceError struct {
 	action      string
 	err         error
-	errorType   string
+	errorType   errortypes.ErrorType
 	userMessage string
-	statusCode  errortypes.ErrorType
 	extraData   map[string]interface{}
 }
 type BaseServiceErrorReply struct {
 	Msg  string `json:"msg"`
-	Type string `json:"type"`
+	Type errortypes.ErrorType `json:"type"`
 }
 
 type BaseServiceReply struct {
@@ -54,7 +53,7 @@ func (se *BaseServiceError) GetUserError() string {
 	return se.userMessage
 }
 
-func (se *BaseServiceError) GetErrorType() string {
+func (se *BaseServiceError) GetErrorType() errortypes.ErrorType {
 	return se.errorType
 }
 
@@ -66,11 +65,11 @@ func (se *BaseServiceError) GetExtraData() map[string]interface{} {
 	return se.extraData
 }
 
-func NewServiceError(action string, status errortypes.ErrorType, err error, userMessage string) ServiceError {
+func NewServiceError(action string, errType errortypes.ErrorType, err error, userMessage string) ServiceError {
 	return &BaseServiceError{
 		action:      action,
 		err:         err,
-		statusCode:  status,
+		errorType:  errType,
 		userMessage: userMessage,
 	}
 
@@ -85,7 +84,7 @@ func NewForbiddenError(action string, err error) ServiceError {
 }
 
 func NewLogicError(action string, err error, userMessage string) ServiceError {
-	return NewServiceError(action, errortypes.BadRequestError, err, userMessage)
+	return NewServiceError(action, errortypes.LogicError, err, userMessage)
 }
 
 //action - what caused the error
@@ -112,4 +111,7 @@ func NewUnauthorizedError(action string, err error) ServiceError {
 
 func NewNoContentError(action string, err error, userMessage string) ServiceError {
 	return NewServiceError(action, errortypes.NoContent, err, userMessage)
+}
+func NewMethodNotAllowed(action, method string) ServiceError {
+	return NewServiceError(action, errortypes.MethodNotAllowed, fmt.Errorf(commonError.NoContent+action+"/"+method), commonError.NoContent)
 }

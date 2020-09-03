@@ -7,10 +7,11 @@ const (
 	NetworkError         ErrorType = "Network"
 	IoError              ErrorType = "Io"
 	BadRequestError      ErrorType = "BadRequest"
-	NoContent            ErrorType = "noContent"
+	NoContent            ErrorType = "NoContent"
 	UnauthorizedError    ErrorType = "Unauthorized"
 	Forbidden            ErrorType = "Forbidden"
 	InternalServiceError ErrorType = "Internal service error"
+	MethodNotAllowed     ErrorType = "MethodNotAllowed"
 )
 
 type ErrorType string
