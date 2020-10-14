@@ -3,26 +3,40 @@ package serviceerror
 import (
 	"bitbucket.org/HeilaSystems/serviceerror/commonError"
 	"bitbucket.org/HeilaSystems/serviceerror/errortypes"
+	"bytes"
 	"fmt"
+	"runtime"
+	"strings"
+	"text/template"
 )
 
 type ServiceError interface {
-	GetInternalError() error
+	WithError(error) ServiceError
+	GetError() error
+	WithReplyValues(ValuesMap) ServiceError
+	GetReplyValues() ValuesMap
+	WithLogMessage(string) ServiceError
+	GetLogMessage() *string
+	WithLogValues(ValuesMap) ServiceError
+	GetLogValues() ValuesMap
+	GetActionLog() string
+	GetSource() string
 	GetUserError() string
 	GetErrorType() errortypes.ErrorType
-	AddExtraData(map[string]interface{}) ServiceError
-	GetExtraData() map[string]interface{}
 }
 
 type BaseServiceError struct {
-	action      string
+	source string
+	logMessage  *string
+	actionLog   string
+	logValues   map[string]interface{}
 	err         error
 	errorType   errortypes.ErrorType
 	userMessage string
 	extraData   map[string]interface{}
 }
 type BaseServiceErrorReply struct {
-	Msg  string `json:"msg"`
+	Msg  string               `json:"msg"`
 	Type errortypes.ErrorType `json:"type"`
 }
 
@@ -36,17 +50,54 @@ type ServiceReply struct {
 	Data interface{} `json:"data,omitempty"`
 }
 
-func (se *BaseServiceError) GetInternalError() error {
-	internalError := se.action
-	if se.err != nil && se.action != se.err.Error() {
-		internalError += " " + se.err.Error()
-	}
-	if len(se.extraData) > 0 {
-		for key, val := range se.extraData {
-			internalError += "\r\n" + key + ": " + fmt.Sprint(val)
+func (se *BaseServiceError) WithError(err error) ServiceError {
+	se.err = err
+	return se
+}
+
+func (se *BaseServiceError) GetError() error {
+	return se.err
+}
+
+func (se *BaseServiceError) WithReplyValues(extraData ValuesMap) ServiceError {
+	se.extraData = extraData
+	return se
+}
+
+func (se *BaseServiceError) GetReplyValues() ValuesMap {
+	return se.extraData
+}
+
+func (se *BaseServiceError) WithLogMessage(logMessage string) ServiceError {
+	se.logMessage = &logMessage
+	return se
+}
+
+var tmplError string = "Templating error"
+
+func (se *BaseServiceError) GetLogMessage() *string {
+	if se.logValues != nil && se.logMessage != nil {
+		tmpl, err := template.New("logMessage").Parse(*se.logMessage)
+		if err != nil {
+			return &tmplError
 		}
+		buf := &bytes.Buffer{}
+		if err := tmpl.Execute(buf, se.logValues); err != nil {
+			return &tmplError
+		}
+		s := buf.String()
+		return &s
 	}
-	return fmt.Errorf(internalError)
+	return se.logMessage
+}
+
+func (se *BaseServiceError) WithLogValues(logValues ValuesMap) ServiceError {
+	se.logValues = logValues
+	return se
+}
+
+func (se *BaseServiceError) GetLogValues() ValuesMap {
+	return se.logValues
 }
 
 func (se *BaseServiceError) GetUserError() string {
@@ -57,61 +108,72 @@ func (se *BaseServiceError) GetErrorType() errortypes.ErrorType {
 	return se.errorType
 }
 
-func (se *BaseServiceError) AddExtraData(extraData map[string]interface{}) ServiceError {
-	se.extraData = extraData
-	return se
+func (se *BaseServiceError) GetActionLog() string {
+	return se.actionLog
 }
-func (se *BaseServiceError) GetExtraData() map[string]interface{} {
-	return se.extraData
+func (se *BaseServiceError) GetSource() string {
+	return se.source
 }
 
-func NewServiceError(action string, errType errortypes.ErrorType, err error, userMessage string) ServiceError {
-	return &BaseServiceError{
-		action:      action,
-		err:         err,
-		errorType:  errType,
-		userMessage: userMessage,
+func NewServiceError(errType errortypes.ErrorType, err error, userMessage string, runTimeCaller int) ServiceError {
+	runTimeCaller += 1
+	pc, fn, line, _ := runtime.Caller(runTimeCaller)
+	sourceArr :=  strings.Split(fn,"/")
+	if len(sourceArr)>=2 {
+		sourceArr = sourceArr[len(sourceArr)-2:]
 	}
 
+	defaultAction := fmt.Sprintf("error in %s",runtime.FuncForPC(pc).Name() )
+	source := fmt.Sprintf("%s:%d" , strings.Join(sourceArr,"/"), line )
+
+	return &BaseServiceError{
+		source: source,
+		actionLog:   defaultAction,
+		err:         err,
+		errorType:   errType,
+		userMessage: userMessage,
+	}
 }
 
-func NewDbError(action string, err error) ServiceError {
-	return NewServiceError(action, errortypes.DbError, err, commonError.InternalServiceError)
+func NewDbError(err error) ServiceError {
+	return NewServiceError(errortypes.DbError, err, commonError.InternalServiceError, 1)
 }
 
-func NewForbiddenError(action string, err error) ServiceError {
-	return NewServiceError(action, errortypes.Forbidden, err, commonError.Forbidden)
+func NewForbiddenError() ServiceError {
+	return NewServiceError(errortypes.Forbidden, nil, commonError.Forbidden, 1)
 }
 
-func NewLogicError(action string, err error, userMessage string) ServiceError {
-	return NewServiceError(action, errortypes.LogicError, err, userMessage)
+func NewLogicError(userMessage string) ServiceError {
+	return NewServiceError(errortypes.LogicError, nil, userMessage, 1)
 }
 
 //action - what caused the error
 
-func NewValidationError(action, userMessage string) ServiceError {
-	return NewServiceError(action, errortypes.ValidationError, fmt.Errorf(userMessage), userMessage)
+func NewValidationError(userMessage string) ServiceError {
+	return NewServiceError(errortypes.ValidationError, nil, userMessage, 1)
 }
 
-func NewNetworkError(action string, err error) ServiceError {
-	return NewServiceError(action, errortypes.NetworkError, err, commonError.InternalServiceError)
+func NewNetworkError(err error) ServiceError {
+	return NewServiceError(errortypes.NetworkError, err, commonError.InternalServiceError, 1)
 }
 
-func NewIoError(action string, err error) ServiceError {
-	return NewServiceError(action, errortypes.IoError, err, commonError.InternalServiceError)
+func NewIoError(err error) ServiceError {
+	return NewServiceError(errortypes.IoError, err, commonError.InternalServiceError, 1)
 }
 
-func NewBadRequestError(action string, err error) ServiceError {
-	return NewServiceError(action, errortypes.BadRequestError, err, commonError.InternalServiceError)
+func NewBadRequestError(err error) ServiceError {
+	return NewServiceError(errortypes.BadRequestError, err, commonError.InternalServiceError, 1)
 }
 
-func NewUnauthorizedError(action string, err error) ServiceError {
-	return NewServiceError(action,  errortypes.UnauthorizedError, err, commonError.InternalServiceError)
+func NewUnauthorizedError(err error) ServiceError {
+	return NewServiceError(errortypes.UnauthorizedError, err, commonError.InternalServiceError, 1)
 }
 
-func NewNoContentError(action string, err error, userMessage string) ServiceError {
-	return NewServiceError(action, errortypes.NoContent, err, userMessage)
+func NewNoContentError(userMessage string) ServiceError {
+	return NewServiceError(errortypes.NoContent, nil, userMessage, 1)
 }
 func NewMethodNotAllowed(action, method string) ServiceError {
-	return NewServiceError(action, errortypes.MethodNotAllowed, fmt.Errorf(commonError.NoContent+action+"/"+method), commonError.NoContent)
+	return NewServiceError(errortypes.MethodNotAllowed, fmt.Errorf(commonError.NoContent+action+"/"+method), commonError.NoContent, 1)
 }
+
+type ValuesMap map[string]interface{}
