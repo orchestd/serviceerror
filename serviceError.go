@@ -5,7 +5,7 @@ import (
 	"bitbucket.org/HeilaSystems/serviceerror/errortypes"
 	"bytes"
 	"fmt"
-	"github.com/pkg/errors"
+	"errors"
 	"runtime"
 	"strings"
 	"text/template"
@@ -123,7 +123,7 @@ func (se *BaseServiceError) GetSource() string {
 	return se.source
 }
 
-func newServiceError(errType errortypes.ErrorType, err error, userMessage string, runTimeCaller int) ServiceError {
+func NewServiceError(errType errortypes.ErrorType, err error, userMessage string, runTimeCaller int) ServiceError {
 	runTimeCaller += 1
 	pc, fn, line, _ := runtime.Caller(runTimeCaller)
 	sourceArr :=  strings.Split(fn,"/")
@@ -144,43 +144,43 @@ func newServiceError(errType errortypes.ErrorType, err error, userMessage string
 }
 
 func NewDbError(err error) ServiceError {
-	return newServiceError(errortypes.DbError, err, commonError.InternalServiceError, 1)
+	return NewServiceError(errortypes.DbError, err, commonError.InternalServiceError, 1)
 }
 
 func NewForbiddenError() ServiceError {
-	return newServiceError(errortypes.Forbidden, nil, commonError.Forbidden, 1)
+	return NewServiceError(errortypes.Forbidden, nil, commonError.Forbidden, 1)
 }
 
 func NewLogicError(userMessage string) ServiceError {
-	return newServiceError(errortypes.LogicError, nil, userMessage, 1)
+	return NewServiceError(errortypes.LogicError, nil, userMessage, 1)
 }
 
 //action - what caused the error
 
 func NewValidationError(userMessage string) ServiceError {
-	return newServiceError(errortypes.ValidationError, nil, userMessage, 1)
+	return NewServiceError(errortypes.ValidationError, nil, userMessage, 1)
 }
 
 func NewNetworkError(err error) ServiceError {
-	return newServiceError(errortypes.NetworkError, err, commonError.InternalServiceError, 1)
+	return NewServiceError(errortypes.NetworkError, err, commonError.InternalServiceError, 1)
 }
 
 func NewIoError(err error) ServiceError {
-	return newServiceError(errortypes.IoError, err, commonError.InternalServiceError, 1)
+	return NewServiceError(errortypes.IoError, err, commonError.InternalServiceError, 1)
 }
 
 func NewBadRequestError(err error) ServiceError {
-	return newServiceError(errortypes.BadRequestError, err, commonError.InternalServiceError, 1)
+	return NewServiceError(errortypes.BadRequestError, err, commonError.InternalServiceError, 1)
 }
 
 func NewUnauthorizedError(err error) ServiceError {
-	return newServiceError(errortypes.UnauthorizedError, err, commonError.InternalServiceError, 1)
+	return NewServiceError(errortypes.UnauthorizedError, err, commonError.InternalServiceError, 1)
 }
 
 func NewNoContentError(userMessage string) ServiceError {
-	return newServiceError(errortypes.NoContent, nil, userMessage, 1)
+	return NewServiceError(errortypes.NoContent, nil, userMessage, 1)
 }
 func NewMethodNotAllowed(action, method string) ServiceError {
-	return newServiceError(errortypes.MethodNotAllowed, fmt.Errorf(commonError.NoContent+action+"/"+method), commonError.NoContent, 1)
+	return NewServiceError(errortypes.MethodNotAllowed, fmt.Errorf(commonError.NoContent+action+"/"+method), commonError.NoContent, 1)
 }
 
