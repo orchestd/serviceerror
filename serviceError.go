@@ -5,7 +5,7 @@ import (
 	"bitbucket.org/HeilaSystems/serviceerror/errortypes"
 	"bytes"
 	"fmt"
-	"errors"
+	"github.com/pkg/errors"
 	"runtime"
 	"strings"
 	"text/template"
