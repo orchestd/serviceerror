@@ -5,20 +5,20 @@ import (
 	"google.golang.org/grpc/codes"
 )
 
-var grpcErrors = map[errortypes.ErrorType]codes.Code{
-	errortypes.UnauthorizedError: codes.Unauthenticated,
-	errortypes.Forbidden: codes.PermissionDenied,
-	errortypes.BadRequestError: codes.Internal,
-	errortypes.DbError: codes.Unavailable,
-	errortypes.InternalServiceError: codes.Unavailable,
-	errortypes.IoError: codes.Unavailable,
-	errortypes.LogicError: codes.Internal,
-	errortypes.NetworkError: codes.Unavailable,
-	errortypes.NoContent: codes.Unknown,
-	errortypes.ValidationError: codes.InvalidArgument,
-	errortypes.MethodNotAllowed: codes.PermissionDenied,
+var grpcErrors = map[types.ErrorType]codes.Code{
+	types.UnauthorizedErrorType:     codes.Unauthenticated,
+	types.ForbiddenErrorType:        codes.PermissionDenied,
+	types.BadRequestErrorType:       codes.Internal,
+	types.DbErrorType:               codes.Unavailable,
+	types.InternalServiceErrorType:  codes.Unavailable,
+	types.IoErrorType:               codes.Unavailable,
+	types.LogicErrorType:            codes.OK,
+	types.NetworkErrorType:          codes.Unavailable,
+	types.NoContentErrorType:        codes.OK,
+	types.ValidationErrorType:       codes.InvalidArgument,
+	types.MethodNotAllowedErrorType: codes.PermissionDenied,
 }
 
-func GetGrpcCode(et errortypes.ErrorType) codes.Code{
+func GetGrpcCode(et types.ErrorType) codes.Code{
 	return grpcErrors[et]
 }

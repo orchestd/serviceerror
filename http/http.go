@@ -1,24 +1,28 @@
 package http
 
 import (
-	"bitbucket.org/HeilaSystems/serviceerror/errortypes"
+	"bitbucket.org/HeilaSystems/serviceerror/types"
 	"net/http"
 )
 
-var grpcErrors = map[errortypes.ErrorType]int{
-	errortypes.UnauthorizedError: http.StatusUnauthorized,
-	errortypes.Forbidden:  http.StatusForbidden,
-	errortypes.BadRequestError:  http.StatusBadRequest,
-	errortypes.DbError: http.StatusInternalServerError,
-	errortypes.InternalServiceError:  http.StatusInternalServerError,
-	errortypes.IoError: http.StatusInternalServerError,
-	errortypes.LogicError: http.StatusBadRequest,
-	errortypes.NetworkError: http.StatusBadGateway,
-	errortypes.NoContent: http.StatusNoContent,
-	errortypes.ValidationError: http.StatusUnprocessableEntity,
-	errortypes.MethodNotAllowed: http.StatusMethodNotAllowed,
+var httpErrors = map[types.ReplyType]int{
+	types.UnauthorizedErrorType:      http.StatusUnauthorized,
+	types.LogicUnauthorizedErrorType: http.StatusOK,
+	types.ForbiddenErrorType:         http.StatusForbidden,
+	types.BadRequestErrorType:        http.StatusBadRequest,
+	types.DbErrorType:                http.StatusInternalServerError,
+	types.InternalServiceErrorType:   http.StatusInternalServerError,
+	types.IoErrorType:                http.StatusInternalServerError,
+	types.NetworkErrorType:           http.StatusBadGateway,
+	types.NoContentErrorType:         http.StatusNoContent,
+	types.ValidationErrorType:        http.StatusUnprocessableEntity,
+	types.MethodNotAllowedErrorType:  http.StatusMethodNotAllowed,
+	types.NoMatchErrorType:           http.StatusOK,
 }
 
-func GetHttpCode(et errortypes.ErrorType) int{
-	return grpcErrors[et]
+func GetHttpCode(et *types.ReplyType) int {
+	if et == nil {
+		return http.StatusOK
+	}
+	return httpErrors[*et]
 }
