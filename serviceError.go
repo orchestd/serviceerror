@@ -13,6 +13,8 @@ import (
 	"text/template"
 )
 
+var SecurityError = errors.New("security error")
+
 type ServiceReply interface {
 	error
 	WithError(error) ServiceReply
