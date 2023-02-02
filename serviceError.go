@@ -1,12 +1,12 @@
 package serviceerror
 
 import (
-	"bitbucket.org/HeilaSystems/serviceerror/commonError"
-	"bitbucket.org/HeilaSystems/serviceerror/status"
-	"bitbucket.org/HeilaSystems/serviceerror/types"
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"github.com/orchestd/serviceerror/commonError"
+	"github.com/orchestd/serviceerror/status"
+	"github.com/orchestd/serviceerror/types"
 	"github.com/pkg/errors"
 	"runtime"
 	"strings"
@@ -32,6 +32,7 @@ type ServiceReply interface {
 }
 
 const statusError = "error"
+
 type BaseServiceError struct {
 	source      string
 	logMessage  *string
@@ -43,13 +44,13 @@ type BaseServiceError struct {
 	extraData   ValuesMap
 }
 type Message struct {
-	Id  string               `json:"id"`
+	Id     string                 `json:"id"`
 	Values map[string]interface{} `json:"values"`
 }
 
 type BaseResponse struct {
-	Status status.Status                 `json:"status"`
-	Message  *Message `json:"message,omitempty"`
+	Status  status.Status `json:"status"`
+	Message *Message      `json:"message,omitempty"`
 }
 
 type Response struct {
@@ -62,8 +63,8 @@ type ValuesMap map[string]interface{}
 var tmplError string = "Templating error"
 
 func (se *BaseServiceError) WithError(err error) ServiceReply {
-	if se.err != nil{
-		se.err = errors.Wrap(se.err,err.Error())
+	if se.err != nil {
+		se.err = errors.Wrap(se.err, err.Error())
 	} else {
 		se.err = err
 	}
@@ -73,26 +74,26 @@ func (se *BaseServiceError) WithError(err error) ServiceReply {
 func (se *BaseServiceError) GetError() error {
 	return se.err
 }
-func (se *BaseServiceError) Error() string{
+func (se *BaseServiceError) Error() string {
 	sr := Response{
 		BaseResponse: BaseResponse{
 			Status: statusError,
 			Message: &Message{
-				Id:    se.GetUserError(),
+				Id:     se.GetUserError(),
 				Values: se.GetReplyValues(),
-			} ,
+			},
 		},
-		Data:             nil,
+		Data: nil,
 	}
-	seBytesArr  , _ := json.Marshal(sr)
+	seBytesArr, _ := json.Marshal(sr)
 	return string(seBytesArr)
 }
-func (se *BaseServiceError) Parse(err string) (Response,error){
+func (se *BaseServiceError) Parse(err string) (Response, error) {
 	parsedSr := Response{}
-	if err := json.Unmarshal([]byte(err) , &parsedSr);err != nil {
-		return Response{},err
+	if err := json.Unmarshal([]byte(err), &parsedSr); err != nil {
+		return Response{}, err
 	}
-	return parsedSr ,nil
+	return parsedSr, nil
 }
 func (se *BaseServiceError) WithReplyValues(extraData ValuesMap) ServiceReply {
 	se.extraData = extraData
@@ -107,7 +108,6 @@ func (se *BaseServiceError) WithLogMessage(logMessage string) ServiceReply {
 	se.logMessage = &logMessage
 	return se
 }
-
 
 func (se *BaseServiceError) GetLogMessage() *string {
 	if se.logValues != nil && se.logMessage != nil {
@@ -152,13 +152,13 @@ func (se *BaseServiceError) GetSource() string {
 func NewServiceError(errType *types.ReplyType, err error, userMessage string, runTimeCaller int) ServiceReply {
 	runTimeCaller += 1
 	pc, fn, line, _ := runtime.Caller(runTimeCaller)
-	sourceArr :=  strings.Split(fn,"/")
-	if len(sourceArr)>=2 {
+	sourceArr := strings.Split(fn, "/")
+	if len(sourceArr) >= 2 {
 		sourceArr = sourceArr[len(sourceArr)-2:]
 	}
 
-	formattedAction := fmt.Sprintf("error in %s",runtime.FuncForPC(pc).Name() )
-	source := fmt.Sprintf("%s:%d" , strings.Join(sourceArr,"/"), line )
+	formattedAction := fmt.Sprintf("error in %s", runtime.FuncForPC(pc).Name())
+	source := fmt.Sprintf("%s:%d", strings.Join(sourceArr, "/"), line)
 
 	return &BaseServiceError{
 		source:      source,
@@ -221,7 +221,7 @@ func NewMethodNotAllowed(action, method string) ServiceReply {
 	return NewServiceError(&et, fmt.Errorf(commonError.NoContent+action+"/"+method), commonError.NoContent, 1)
 }
 
-func NewMessage(userMessage string)ServiceReply {
+func NewMessage(userMessage string) ServiceReply {
 	return NewServiceError(nil, nil, userMessage, 1)
 }
 
@@ -234,4 +234,3 @@ func LogicUnauthorizedErrorType(userMessage string) ServiceReply {
 	et := types.LogicUnauthorizedErrorType
 	return NewServiceError(&et, nil, userMessage, 1)
 }
-

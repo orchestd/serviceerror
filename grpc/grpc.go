@@ -1,7 +1,7 @@
 package grpc
 
 import (
-	"bitbucket.org/HeilaSystems/serviceerror/errortypes"
+	"github.com/orchestd/serviceerror/types"
 	"google.golang.org/grpc/codes"
 )
 
@@ -19,6 +19,6 @@ var grpcErrors = map[types.ErrorType]codes.Code{
 	types.MethodNotAllowedErrorType: codes.PermissionDenied,
 }
 
-func GetGrpcCode(et types.ErrorType) codes.Code{
+func GetGrpcCode(et types.ErrorType) codes.Code {
 	return grpcErrors[et]
 }

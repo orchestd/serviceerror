@@ -1,7 +1,7 @@
 package http
 
 import (
-	"bitbucket.org/HeilaSystems/serviceerror/types"
+	"github.com/orchestd/serviceerror/types"
 	"net/http"
 )
 

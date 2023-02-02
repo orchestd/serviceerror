@@ -1,4 +1,4 @@
-module bitbucket.org/HeilaSystems/serviceerror
+module github.com/orchestd/serviceerror
 
 go 1.13
 

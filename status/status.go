@@ -1,22 +1,22 @@
 package status
 
 import (
-	"bitbucket.org/HeilaSystems/serviceerror/types"
+	"github.com/orchestd/serviceerror/types"
 )
 
 var statusMap = map[types.ReplyType]Status{
-	types.UnauthorizedErrorType:     UnauthorizedStatus,
+	types.UnauthorizedErrorType:      UnauthorizedStatus,
 	types.LogicUnauthorizedErrorType: UnauthorizedStatus,
-	types.ForbiddenErrorType:        DeniedStatus,
-	types.BadRequestErrorType:       ErrorStatus,
-	types.DbErrorType:               ErrorStatus,
-	types.InternalServiceErrorType:  ErrorStatus,
-	types.IoErrorType:               ErrorStatus,
-	types.NetworkErrorType:          ErrorStatus,
-	types.NoContentErrorType:        NoMatchStatus,
-	types.ValidationErrorType:       InvalidStatus,
-	types.MethodNotAllowedErrorType: DeniedStatus,
-	types.NoMatchErrorType:          NoMatchStatus,
+	types.ForbiddenErrorType:         DeniedStatus,
+	types.BadRequestErrorType:        ErrorStatus,
+	types.DbErrorType:                ErrorStatus,
+	types.InternalServiceErrorType:   ErrorStatus,
+	types.IoErrorType:                ErrorStatus,
+	types.NetworkErrorType:           ErrorStatus,
+	types.NoContentErrorType:         NoMatchStatus,
+	types.ValidationErrorType:        InvalidStatus,
+	types.MethodNotAllowedErrorType:  DeniedStatus,
+	types.NoMatchErrorType:           NoMatchStatus,
 }
 
 type Status string
